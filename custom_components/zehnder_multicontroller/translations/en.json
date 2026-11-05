@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Zehnder Multicontroller",
-        "description": "If you need help with the configuration have a look here: https://github.com/morphiumdeus/zehnder-multicontroller",
+        "description": "If you need help with the configuration have a look here: {docs_url}",
         "data": {
           "host": "Rainmaker API Host",
           "username": "Username",

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Zehnder Multicontroller",
-        "description": "Si vous avez besoin d'aide pour la configuration, regardez ici: https://github.com/morphiumdeus/zehnder-multicontroller",
+        "description": "Si vous avez besoin d'aide pour la configuration, regardez ici: {docs_url}",
         "data": {
           "username": "Identifiant",
           "password": "Mot de Passe"

@@ -23,6 +23,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "https://api.rainmaker.espressif.com/v1/"
+DOCS_URL = "https://github.com/oliver-hurtig/zehnder-multicontroller"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -69,7 +70,9 @@ class ZehnderMulticontrollerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-                data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors=errors,
+                description_placeholders={"docs_url": DOCS_URL},
             )
 
         try:
@@ -93,7 +96,11 @@ class ZehnderMulticontrollerFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=info["title"], data=user_input)
 
         # If we reach here, validation failed — redisplay form with errors
-        return self.async_show_form(data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
+        return self.async_show_form(
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"docs_url": DOCS_URL},
+        )
 
 
 class ZehnderMulticontrollerOptionsFlow(OptionsFlow):

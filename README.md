@@ -30,7 +30,7 @@
 
 ### HACS (Recommended)
 
-1. Add this repository to HACS as a custom repository
+1. In HACS open the menu (top right) -> **Custom repositories** and add `https://github.com/oliver-hurtig/zehnder-multicontroller` with the type **Integration**
 2. Search for "Zehnder Multicontroller" in HACS
 3. Install the integration
 4. Restart Home Assistant
@@ -57,6 +57,7 @@ custom_components/zehnder_multicontroller/climate.py
 custom_components/zehnder_multicontroller/config_flow.py
 custom_components/zehnder_multicontroller/const.py
 custom_components/zehnder_multicontroller/coordinator.py
+custom_components/zehnder_multicontroller/helpers.py
 custom_components/zehnder_multicontroller/manifest.json
 custom_components/zehnder_multicontroller/number.py
 custom_components/zehnder_multicontroller/sensor.py
@@ -133,8 +134,8 @@ Code template was mainly taken from [@Ludeeus](https://github.com/ludeeus)'s [in
 [black-shield]: https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge
 [buymecoffee]: https://www.buymeacoffee.com/morphiumdeus
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/morphiumdeus/zehnder-multicontroller.svg?style=for-the-badge
-[commits]: https://github.com/morphiumdeus/zehnder-multicontroller/commits/main
+[commits-shield]: https://img.shields.io/github/commit-activity/y/oliver-hurtig/zehnder-multicontroller.svg?style=for-the-badge
+[commits]: https://github.com/oliver-hurtig/zehnder-multicontroller/commits/main
 [hacs]: https://hacs.xyz
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
@@ -142,10 +143,10 @@ Code template was mainly taken from [@Ludeeus](https://github.com/ludeeus)'s [in
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/morphiumdeus/zehnder-multicontroller.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-%40morphiumdeus-blue.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/oliver-hurtig/zehnder-multicontroller.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/badge/maintainer-%40oliver-hurtig-blue.svg?style=for-the-badge
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [pre-commit-shield]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/morphiumdeus/zehnder-multicontroller.svg?style=for-the-badge
-[releases]: https://github.com/morphiumdeus/zehnder-multicontroller/releases
-[user_profile]: https://github.com/morphiumdeus
+[releases-shield]: https://img.shields.io/github/release/oliver-hurtig/zehnder-multicontroller.svg?style=for-the-badge
+[releases]: https://github.com/oliver-hurtig/zehnder-multicontroller/releases
+[user_profile]: https://github.com/oliver-hurtig
