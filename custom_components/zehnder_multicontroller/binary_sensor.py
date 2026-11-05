@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .helpers import handled_by_climate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +76,9 @@ async def async_setup_entry(
         for param, meta in params.items():
             # Skip schedules, config, and Name parameters
             if param == "Name" or param == "config" or "schedule" in param.lower():
+                continue
+            # Covered by the climate entity -> don't duplicate it
+            if handled_by_climate(entry, params, param):
                 continue
             if (
                 meta.get("data_type") == "bool"

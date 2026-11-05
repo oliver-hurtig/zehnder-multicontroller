@@ -5,12 +5,18 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import OptionsFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.core import callback
+
+from .const import CONF_USE_CLIMATE
+from .const import DEFAULT_USE_CLIMATE
 from .const import DOMAIN
 
 
@@ -40,6 +46,12 @@ class ZehnderMulticontrollerFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Zehnder Multicontroller."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow handler."""
+        return ZehnderMulticontrollerOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,3 +94,21 @@ class ZehnderMulticontrollerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # If we reach here, validation failed — redisplay form with errors
         return self.async_show_form(data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
+
+
+class ZehnderMulticontrollerOptionsFlow(OptionsFlow):
+    """Options: choose between the climate entity and individual entities."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current = self.config_entry.options.get(CONF_USE_CLIMATE, DEFAULT_USE_CLIMATE)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_USE_CLIMATE, default=current): bool}
+            ),
+        )

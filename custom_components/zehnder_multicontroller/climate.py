@@ -10,13 +10,14 @@ from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .helpers import is_climate_node
+from .helpers import use_climate_entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         self._node_name = node_name
         self._attr_name = node_name
         self._unique_id = f"{entry_id}_{node_id}_climate"
+        self._fan_min = 0
 
         try:
             self._attr_temperature_unit = coordinator.hass.config.units.temperature_unit
@@ -54,19 +56,34 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
 
         self._attr_supported_features = self.get_supported_features()
 
+    def _fan_bounds(self) -> tuple[int, int]:
+        """Return the (min, max) fan_speed bounds as integers."""
+        node_data = self.coordinator.data.get(self._node_id, {})
+        bounds = node_data.get("fan_speed", {}).get("bounds") or {}
+        try:
+            min_val = int(bounds.get("min", 0))
+            max_val = int(bounds.get("max", min_val + len(DEFAULT_FAN_NAMES) - 1))
+        except (TypeError, ValueError):
+            min_val, max_val = 0, len(DEFAULT_FAN_NAMES) - 1
+        if max_val < min_val:
+            max_val = min_val
+        return min_val, max_val
+
     def _initialize_fan_names(self) -> list[str]:
         """Initialize fan mode names based on fan_speed bounds."""
         node_data = self.coordinator.data.get(self._node_id, {})
 
         if "fan_speed" not in node_data:
+            self._fan_min = 0
             return DEFAULT_FAN_NAMES
 
-        bounds = node_data["fan_speed"].get("bounds", {})
-        min_val = bounds.get("min", 0)
-        max_val = bounds.get("max", 3)
+        min_val, max_val = self._fan_bounds()
+        # fan_speed values are offset by the lower bound: value == min_val
+        # corresponds to the first fan mode name.
+        self._fan_min = min_val
 
         # Calculate number of levels
-        num_levels = int(max_val - min_val) + 1
+        num_levels = max_val - min_val + 1
 
         # Check if default names match the number of levels
         if num_levels == len(DEFAULT_FAN_NAMES):
@@ -106,6 +123,33 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
             if param.lower() == "temp_setpoint":
                 return meta.get("value")
         return None
+
+    def _setpoint_bounds(self) -> dict[str, Any]:
+        node_data = self.coordinator.data.get(self._node_id, {})
+        bounds = node_data.get("temp_setpoint", {}).get("bounds")
+        return bounds if isinstance(bounds, dict) else {}
+
+    @property
+    def min_temp(self) -> float:
+        min_val = self._setpoint_bounds().get("min")
+        if min_val is None:
+            return super().min_temp
+        min_val = float(min_val)
+        # Same adjustment as the number platform: allow 18 °C when the
+        # device reports 20 °C as its lower bound.
+        return 18.0 if min_val == 20.0 else min_val
+
+    @property
+    def max_temp(self) -> float:
+        max_val = self._setpoint_bounds().get("max")
+        if max_val is None:
+            return super().max_temp
+        return float(max_val)
+
+    @property
+    def target_temperature_step(self) -> float | None:
+        step = self._setpoint_bounds().get("step")
+        return float(step) if step else None
 
     @cached_property
     def hvac_modes(self) -> list[HVACMode]:
@@ -178,10 +222,13 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         val = node_data["fan_speed"].get("value")
         if val is None:
             return None
-        level = int(val)
+        try:
+            index = int(val) - self._fan_min
+        except (TypeError, ValueError):
+            return None
 
-        if 0 <= level < len(self._fan_names):
-            return self._fan_names[level]
+        if 0 <= index < len(self._fan_names):
+            return self._fan_names[index]
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -221,7 +268,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
             if fan_mode not in self._fan_names:
                 _LOGGER.warning("Unknown fan mode: %s", fan_mode)
                 return
-            level = self._fan_names.index(fan_mode)
+            level = self._fan_names.index(fan_mode) + self._fan_min
             await self.coordinator.api.async_set_param(
                 self._node_id, "fan_speed", level
             )
@@ -242,30 +289,29 @@ async def async_setup_entry(
         )
         return
 
+    if not use_climate_entity(entry):
+        _LOGGER.info(
+            "Climate entity disabled in options; using individual entities instead"
+        )
+        return
+
     coordinator = entry_data["coordinator"]
     _LOGGER.debug("Coordinator data contains %d nodes", len(coordinator.data))
 
     entities: list[ZehnderClimate] = []
-    registry = er.async_get(hass)
 
     for node_id, params in coordinator.data.items():
         _LOGGER.debug("Checking node %s for climate entity creation", node_id)
         _LOGGER.debug("Node %s params: %s", node_id, list(params.keys()))
 
-        if "temp" not in params:
+        if not is_climate_node(params):
             _LOGGER.debug("Node %s does not have 'temp' parameter, skipping", node_id)
             continue
 
-        unique_id = f"{entry.entry_id}_{node_id}_climate"
-
-        if registry.async_get_entity_id("climate", DOMAIN, unique_id) is not None:
-            _LOGGER.debug(
-                "Skipping climate entity for node %s because unique_id %s is already registered",
-                node_id,
-                unique_id,
-            )
-            continue
-
+        # Always (re)create the entity object. An existing entity registry
+        # entry with the same unique_id is reattached automatically by HA;
+        # skipping it here leaves the registry entry orphaned, which shows
+        # up as "unavailable" after every restart or reload.
         node_name = params.get("Name", {}).get("value", node_id)
         _LOGGER.info(
             "Creating climate entity for node %s (name: %s)", node_id, node_name

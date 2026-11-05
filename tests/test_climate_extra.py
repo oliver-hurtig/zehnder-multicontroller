@@ -193,31 +193,11 @@ async def test_async_setup_entry_registry_behavior(DummyCoordinator, monkeypatch
     def add(entities, update_before):
         added.extend(entities)
 
-    # Case 1: registry returns an entity id -> skip creation
-    class Reg:
-        def async_get(self, hass):
-            return self
-
-        def async_get_entity_id(self, platform, domain, unique_id):
-            return "climate.1"
-
-    monkeypatch.setattr(
-        "homeassistant.helpers.entity_registry.async_get", lambda hass: Reg()
-    )
+    # Entity must be created on every setup, even when its unique_id is
+    # already in the entity registry (e.g. after a restart or reload).
     await async_setup_entry(hass, entry, add)
-    assert len(added) == 0
+    assert len(added) == 1
 
-    # Case 2: registry returns None -> create entity
-    class Reg2:
-        def async_get(self, hass):
-            return self
-
-        def async_get_entity_id(self, platform, domain, unique_id):
-            return None
-
-    monkeypatch.setattr(
-        "homeassistant.helpers.entity_registry.async_get", lambda hass: Reg2()
-    )
     added.clear()
     await async_setup_entry(hass, entry, add)
     assert len(added) == 1

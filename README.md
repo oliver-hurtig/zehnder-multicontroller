@@ -75,6 +75,43 @@ Configuration is done through the UI:
    - **Username**: Your Rainmaker username
    - **Password**: Your Rainmaker password
 
+### Options
+
+Click **Configure** on the integration to choose how climate devices are exposed:
+
+- **Use climate entity** (default): setpoint, season (heat/cool), heating/cooling enable and
+  fan speed are controlled through one `climate` entity. They are not also created as separate
+  number/switch entities. The read-only temperature sensor is kept, because it records the
+  temperature's long-term statistics.
+- **Disabled**: no `climate` entity is created. Each of those values gets its own number or
+  switch entity instead.
+
+Changing the option reloads the integration and removes the entities the selected mode does
+not use.
+
+### Long-term statistics
+
+Home Assistant keeps long-term statistics (hourly mean/min/max, stored indefinitely) only for
+sensor entities with a state class. Controls such as `climate`, `number` and `switch` entities
+never get them. To make heating programs analysable over a whole season, this integration
+provides:
+
+- A state class on all read-only numeric sensors (temperature, humidity, ...).
+- A diagnostic **"... statistics"** sensor for every writable numeric value (e.g. setpoint,
+  fan speed) and for every on/off value. On/off values are recorded as 0 or 100 %, so the
+  hourly mean is the share of time the value was on (e.g. how much of each hour heating was
+  enabled). `season` is left out because the average of a mode number isn't meaningful.
+
+These sensors are created regardless of the climate option.
+
+Detailed (non-statistics) history is deleted after 10 days by default. To keep it longer
+while tuning your heating programs, raise the retention in `configuration.yaml`:
+
+```yaml
+recorder:
+  purge_keep_days: 365
+```
+
 ## Requirements
 
 This integration uses the `rainmaker-http` Python package to communicate with the Rainmaker API.

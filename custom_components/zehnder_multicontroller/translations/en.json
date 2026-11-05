@@ -19,5 +19,16 @@
     "abort": {
       "already_configured": "This account is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Zehnder Multicontroller options",
+        "description": "With the climate entity enabled, setpoint, season, heating/cooling enable and fan speed are controlled through a single climate entity and are not created as separate number/switch entities. Disable it to get individual number and switch entities instead. Temperature and statistics sensors are created in both modes.",
+        "data": {
+          "use_climate_entity": "Use climate entity"
+        }
+      }
+    }
   }
 }

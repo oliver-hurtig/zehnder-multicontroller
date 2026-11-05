@@ -85,9 +85,13 @@ async def test_async_get_nodes_wrong_format(monkeypatch):
         await api.async_get_nodes()
 
 
-def test_async_set_param_not_connected():
+@pytest.mark.asyncio
+async def test_async_set_param_not_connected_reconnect_fails():
     api = api_module.RainmakerAPI(None, "https://host/", "user", "pass")
-    with pytest.raises(api_module.RainmakerConnectionError):
-        import asyncio
 
-        asyncio.get_event_loop().run_until_complete(api.async_set_param("n1", "p", 1))
+    async def failing_reconnect():
+        raise api_module.RainmakerConnectionError("Network error")
+
+    api._reconnect = failing_reconnect
+    with pytest.raises(api_module.RainmakerConnectionError):
+        await api.async_set_param("n1", "p", 1)

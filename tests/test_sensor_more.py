@@ -34,13 +34,19 @@ async def test_sensor_setup_and_attributes(DummyCoordinator):
     fake = FakeHass()
     fake.data = {}
 
+    # Individual-entity mode: the climate entity is disabled, so 'temp' is
+    # exposed as its own sensor.
+    entry = type(
+        "E", (), {"entry_id": "eid", "options": {"use_climate_entity": False}}
+    )()
+
     # No entry data -> should early return without error
-    await async_setup_entry(fake, type("E", (), {"entry_id": "eid"})(), add)
+    await async_setup_entry(fake, entry, add)
 
     # Attach coordinator into hass.data and run setup
     fake.data.setdefault("zehnder_multicontroller", {})["eid"] = {"coordinator": coord}
     added.clear()
-    await async_setup_entry(fake, type("E", (), {"entry_id": "eid"})(), add)
+    await async_setup_entry(fake, entry, add)
 
     # We should have sensors for temp and humidity, but not Name/config/schedule or writable bool
     names = [e.name for e in added]

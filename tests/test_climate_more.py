@@ -201,16 +201,6 @@ def test_async_setup_entry_skips_node_without_temp(monkeypatch, DummyCoordinator
     def add(entities, update_before_add):
         added.extend(entities)
 
-    # Use a registry that always returns None so creation is allowed
-    class Reg:
-        def async_get_entity_id(self, *a, **k):
-            return None
-
-    monkeypatch.setattr(
-        "custom_components.zehnder_multicontroller.climate.er.async_get",
-        lambda hass: Reg(),
-    )
-
     import asyncio
 
     awaitable = __import__(
@@ -320,7 +310,7 @@ def test_async_setup_entry_no_entry_data_climate():
     )
 
 
-def test_async_setup_entry_creates_and_skips(monkeypatch, DummyCoordinator):
+def test_async_setup_entry_creates_on_every_setup(monkeypatch, DummyCoordinator):
     # Prepare coordinator with one node that has temp
     data = {"nodea": {"temp": {"value": 21}, "Name": {"value": "NA"}}}
     coord = DummyCoordinator(data)
@@ -337,16 +327,6 @@ def test_async_setup_entry_creates_and_skips(monkeypatch, DummyCoordinator):
     def add(entities, update_before_add):
         added.extend(entities)
 
-    # First, registry says entity is not present -> entity created
-    class Reg:
-        def async_get_entity_id(self, *a, **k):
-            return None
-
-    monkeypatch.setattr(
-        "custom_components.zehnder_multicontroller.climate.er.async_get",
-        lambda hass: Reg(),
-    )
-
     awaitable = __import__(
         "custom_components.zehnder_multicontroller.climate",
         fromlist=["async_setup_entry"],
@@ -359,19 +339,10 @@ def test_async_setup_entry_creates_and_skips(monkeypatch, DummyCoordinator):
     )
     assert any(e for e in added if isinstance(e.__class__.__name__, str))
 
-    # Now simulate registry returning an id -> should skip creating duplicates
+    # A second setup (restart/reload) must create the entity again so the
+    # existing registry entry gets reattached instead of going unavailable.
     added.clear()
-
-    class Reg2:
-        def async_get_entity_id(self, *a, **k):
-            return "climate.zehnder_multicontroller_eid_nodea_climate"
-
-    monkeypatch.setattr(
-        "custom_components.zehnder_multicontroller.climate.er.async_get",
-        lambda hass: Reg2(),
-    )
-
     asyncio.get_event_loop().run_until_complete(
         awaitable(fake, type("E", (), {"entry_id": "eid"})(), add)
     )
-    assert len(added) == 0
+    assert len(added) == 1

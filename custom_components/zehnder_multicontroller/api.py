@@ -135,18 +135,39 @@ class RainmakerAPI:
         return data
 
     async def async_set_param(self, node_id: str, param: str, value: Any) -> None:
-        if not self._connected:
-            raise RainmakerConnectionError("Not connected")
+        try:
+            await self._ensure_connection()
+        except RainmakerError:
+            raise
+        except Exception as err:  # pragma: no cover - defensive
+            raise RainmakerConnectionError("Not connected") from err
 
         payload = {self._service_name: {param: value}}
 
         batch = [{"node_id": node_id, "payload": payload}]
-        try:
-            assert self._client is not None
-            result = await self._client.async_set_params(batch)
-        except Exception as err:
-            _LOGGER.debug("Failed to set param via rainmaker client: %s", err)
-            raise RainmakerError("Failed to set param") from err
+        result: Any = None
+        for attempt in (1, 2):
+            try:
+                assert self._client is not None
+                result = await self._client.async_set_params(batch)
+                break
+            except Exception as err:
+                _LOGGER.debug(
+                    "Failed to set param via rainmaker client (attempt %d): %s",
+                    attempt,
+                    err,
+                )
+                if attempt == 1:
+                    # Most likely an expired session token: log in again and
+                    # retry once, mirroring async_get_nodes.
+                    try:
+                        await self._reconnect()
+                    except RainmakerError as reconnect_err:
+                        raise RainmakerError(
+                            "Failed to set param: reconnect failed"
+                        ) from reconnect_err
+                    continue
+                raise RainmakerError("Failed to set param") from err
 
         if isinstance(result, list):
             for res in result:

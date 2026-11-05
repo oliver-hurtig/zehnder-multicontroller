@@ -152,9 +152,43 @@ async def test_async_set_param_client_raises():
     api = RainmakerAPI(None, "h", "u", "p")
     api._client = Client()
     api._connected = True
+    reconnects = []
+
+    async def fake_reconnect():
+        reconnects.append(1)
+
+    api._reconnect = fake_reconnect
 
     with pytest.raises(RainmakerError):
         await api.async_set_param("n1", "p", 1)
+    # One reconnect attempt before giving up
+    assert len(reconnects) == 1
+
+
+@pytest.mark.asyncio
+async def test_async_set_param_reconnects_on_expired_session():
+    calls = []
+
+    class Client:
+        async def async_set_params(self, batch):
+            calls.append(batch)
+            if len(calls) == 1:
+                raise RuntimeError("token expired")
+            return [{"node_id": "n1", "status": "success"}]
+
+    api = RainmakerAPI(None, "h", "u", "p")
+    api._client = Client()
+    api._connected = True
+    reconnects = []
+
+    async def fake_reconnect():
+        reconnects.append(1)
+
+    api._reconnect = fake_reconnect
+
+    await api.async_set_param("n1", "p", 1)
+    assert len(calls) == 2
+    assert len(reconnects) == 1
 
 
 @pytest.mark.asyncio

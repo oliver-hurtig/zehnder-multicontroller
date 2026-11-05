@@ -6,11 +6,64 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 from .const import PLATFORMS
+from .helpers import is_climate_node
+from .helpers import is_climate_param
+from .helpers import use_climate_entity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _async_remove_unused_entities(
+    hass: HomeAssistant, entry: ConfigEntry, data: dict | None
+) -> None:
+    """Remove registry entries for entities the current mode doesn't create.
+
+    With the climate entity enabled, the individual entities for the params
+    it covers are not created; with it disabled, the climate entity is not
+    created. Leaving their registry entries behind would show them as
+    "unavailable", so remove them.
+    """
+    if not data:
+        return
+
+    use_climate = use_climate_entity(entry)
+    unused: set[str] = set()
+    for node_id, params in data.items():
+        if not is_climate_node(params):
+            continue
+        if use_climate:
+            unused.update(
+                f"{entry.entry_id}_{node_id}_{param}"
+                for param in params
+                if is_climate_param(param)
+            )
+        else:
+            unused.add(f"{entry.entry_id}_{node_id}_climate")
+
+    if not unused:
+        return
+
+    registry = er.async_get(hass)
+    for reg_entry in list(registry.entities.values()):
+        if (
+            reg_entry.config_entry_id == entry.entry_id
+            and reg_entry.unique_id in unused
+        ):
+            _LOGGER.info(
+                "Removing %s: not used with use_climate_entity=%s",
+                reg_entry.entity_id,
+                use_climate,
+            )
+            registry.async_remove(reg_entry.entity_id)
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when options change so entities are recreated."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -54,6 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "api": api,
         "coordinator": coordinator,
     }
+
+    _async_remove_unused_entities(hass, entry, coordinator.data)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     _LOGGER.info("Forwarding setup to platforms: %s", PLATFORMS)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

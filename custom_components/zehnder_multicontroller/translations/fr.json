@@ -19,11 +19,11 @@
   },
   "options": {
     "step": {
-      "user": {
+      "init": {
+        "title": "Options Zehnder Multicontroller",
+        "description": "Avec l'entité climat activée, la consigne, la saison, l'activation chauffage/refroidissement et la vitesse du ventilateur sont gérées par une seule entité climat et ne sont pas créées comme entités nombre/interrupteur séparées. Désactivez-la pour obtenir des entités nombre et interrupteur individuelles. Les capteurs de température et de statistiques sont créés dans les deux modes.",
         "data": {
-          "binary_sensor": "Capteur binaire activé",
-          "sensor": "Capteur activé",
-          "switch": "Interrupteur activé"
+          "use_climate_entity": "Utiliser l'entité climat"
         }
       }
     }
