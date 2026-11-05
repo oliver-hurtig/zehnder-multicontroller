@@ -1,5 +1,5 @@
 # homeassistant is installed (pinned) by pytest-homeassistant-custom-component.
 # Don't include requirements_dev.txt: its unpinned homeassistant makes pip
 # backtrack through versions for hours.
-pytest-homeassistant-custom-component==0.13.307
+pytest-homeassistant-custom-component==0.13.375
 rainmaker_http
