@@ -1,4 +1,5 @@
 """Unit tests for number platform."""
+
 from __future__ import annotations
 
 import pytest

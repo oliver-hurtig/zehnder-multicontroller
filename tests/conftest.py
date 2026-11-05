@@ -1,4 +1,5 @@
 """Global fixtures for Zehnder Multicontroller integration."""
+
 from unittest.mock import patch
 
 import pytest

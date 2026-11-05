@@ -1,4 +1,5 @@
 """Tests for the config flow validation logic."""
+
 from __future__ import annotations
 
 import pytest

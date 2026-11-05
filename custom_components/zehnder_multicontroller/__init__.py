@@ -1,4 +1,5 @@
 """Zehnder Multicontroller integration (custom_component for HACS)."""
+
 from __future__ import annotations
 
 import logging

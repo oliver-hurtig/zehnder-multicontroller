@@ -1,4 +1,5 @@
 """Edge-case tests for setup, reconnects and entity properties."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -23,7 +24,6 @@ from custom_components.zehnder_multicontroller.number import RainmakerParamNumbe
 from custom_components.zehnder_multicontroller.switch import RainmakerParamSwitch
 from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 
 # --- integration setup -------------------------------------------------------
 

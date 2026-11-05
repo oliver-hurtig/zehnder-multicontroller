@@ -1,4 +1,5 @@
 """Extra unit tests for the Rainmaker API adapter."""
+
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,5 @@
 """Additional tests for climate platform to increase coverage."""
+
 from __future__ import annotations
 
 import pytest

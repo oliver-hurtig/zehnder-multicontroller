@@ -1,4 +1,5 @@
 """Extra tests for coordinator to cover connect and error paths."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock

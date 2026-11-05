@@ -1,4 +1,5 @@
 """Constants for Zehnder Multicontroller tests."""
+
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.const import CONF_USERNAME
 

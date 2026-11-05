@@ -1,4 +1,5 @@
 """Tests for switch platform entity behaviour."""
+
 from __future__ import annotations
 
 import pytest

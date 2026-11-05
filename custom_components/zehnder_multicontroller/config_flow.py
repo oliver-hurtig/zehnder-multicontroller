@@ -1,4 +1,5 @@
 """Adds config flow for Zehnder Multicontroller."""
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +19,6 @@ from homeassistant.core import callback
 from .const import CONF_USE_CLIMATE
 from .const import DEFAULT_USE_CLIMATE
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 

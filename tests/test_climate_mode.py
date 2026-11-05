@@ -1,4 +1,5 @@
 """Tests for the climate-entity vs individual-entities option."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -21,7 +22,6 @@ from custom_components.zehnder_multicontroller.switch import (
     async_setup_entry as switch_setup,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 
 NODE = {
     "Name": {"value": "Living"},

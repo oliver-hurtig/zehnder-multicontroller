@@ -1,4 +1,5 @@
 """Data coordinator for Zehnder Multicontroller."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .api import RainmakerAPI
 from .const import DEFAULT_SCAN_INTERVAL
-
 
 _LOGGER = logging.getLogger(__name__)
 

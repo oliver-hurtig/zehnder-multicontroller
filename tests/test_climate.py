@@ -1,4 +1,5 @@
 """Unit tests for climate platform behavior."""
+
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,5 @@
 """End-to-end tests that load the integration in a real Home Assistant core."""
+
 from __future__ import annotations
 
 from copy import deepcopy

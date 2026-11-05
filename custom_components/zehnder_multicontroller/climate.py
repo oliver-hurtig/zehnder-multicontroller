@@ -1,4 +1,5 @@
 """Climate platform for Zehnder Multicontroller."""
+
 from __future__ import annotations
 
 import logging
@@ -103,7 +104,7 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
     @cached_property
     def device_info(self) -> DeviceInfo | None:
         return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._entry_id}_{self._node_id}" )},
+            identifiers={(DOMAIN, f"{self._entry_id}_{self._node_id}")},
             name=self._node_name,
             manufacturer="ESP RainMaker",
         )

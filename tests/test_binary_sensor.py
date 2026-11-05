@@ -1,4 +1,5 @@
 """Unit tests for binary sensor platform."""
+
 from __future__ import annotations
 
 import pytest

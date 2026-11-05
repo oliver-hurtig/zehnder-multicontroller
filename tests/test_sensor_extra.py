@@ -1,4 +1,5 @@
 """Additional sensor tests for edge cases."""
+
 from __future__ import annotations
 
 import pytest

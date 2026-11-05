@@ -1,4 +1,5 @@
 """Tests for ZehnderMulticontrollerEntity helpers."""
+
 from __future__ import annotations
 
 from custom_components.zehnder_multicontroller.entity import (
