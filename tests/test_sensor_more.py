@@ -115,7 +115,7 @@ async def test_sensor_device_info_and_unique_id(DummyCoordinator):
     await async_setup_entry(fake, type("E", (), {"entry_id": "eid"})(), add)
     s = next(e for e in added if e.unique_id.endswith("_param1"))
     di = s.device_info
-    assert ("zehnder_multicontroller", "node") in di["identifiers"]
+    assert ("zehnder_multicontroller", "eid_node") in di["identifiers"]
     assert s.unique_id.endswith("_param1")
 
 
@@ -129,7 +129,7 @@ def test_sensor_direct_properties(DummyCoordinator):
     assert s.unique_id == "eid_node_p"
     assert s.native_value == 5
     di = s.device_info
-    assert ("zehnder_multicontroller", "node") in di["identifiers"]
+    assert ("zehnder_multicontroller", "eid_node") in di["identifiers"]
 
 
 @pytest.mark.asyncio

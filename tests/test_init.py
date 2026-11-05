@@ -54,9 +54,9 @@ async def test_setup_and_unload_entry_creates_hass_data(
         hass.config_entries, "async_forward_entry_setups", AsyncMock(return_value=None)
     )
 
-    # Stub the entity registry getter used by the integration migration
-    # helper so it does not try to access HomeAssistant internals like
-    # the event bus or storage manager during this unit test.
+    # Stub the entity registry getter used when removing unused entities so
+    # it does not try to access HomeAssistant internals like the event bus
+    # or storage manager during this unit test.
     from types import SimpleNamespace
     import importlib
 
@@ -71,9 +71,7 @@ async def test_setup_and_unload_entry_creates_hass_data(
         ),
     )
 
-    from custom_components.zehnder_multicontroller.const import VERSION
-
-    config_entry = MockConfigEntry(domain=DOMAIN, data={"integration_version": VERSION})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
 
     # Store the minimal expected entry data before setup
     assert await async_setup_entry(hass, config_entry)

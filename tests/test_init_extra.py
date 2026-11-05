@@ -1,78 +1,13 @@
-"""Tests for integration setup/migration/unload flows."""
+"""Tests for integration setup/unload flows."""
 from __future__ import annotations
 
 import importlib
 
 import pytest
 from custom_components.zehnder_multicontroller.const import DOMAIN
-from custom_components.zehnder_multicontroller.const import VERSION
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 integ = importlib.import_module("custom_components.zehnder_multicontroller")
-
-
-class DummyEntity:
-    def __init__(self, entity_id, config_entry_id, domain):
-        self.entity_id = entity_id
-        self.config_entry_id = config_entry_id
-        self.domain = domain
-
-
-@pytest.mark.asyncio
-async def test_async_migrate_entry_removes_climate(monkeypatch):
-    # Build a fake registry with mixed entities
-    reg = type("R", (), {})()
-    reg.entities = {
-        "climate.foo": DummyEntity("climate.foo", "e1", "climate"),
-        "sensor.bar": DummyEntity("sensor.bar", "e1", "sensor"),
-    }
-
-    removed = []
-
-    def async_remove(entity_id):
-        removed.append(entity_id)
-
-    reg.async_remove = async_remove
-
-    monkeypatch.setattr(
-        "homeassistant.helpers.entity_registry.async_get", lambda hass: reg
-    )
-
-    class DummyHass:
-        def __init__(self):
-            self.config_entries = type("C", (), {})()
-
-        config_entries = None
-
-    hass = DummyHass()
-
-    class Entry:
-        def __init__(self):
-            self.entry_id = "e1"
-            self.data = {"integration_version": "0.0.0"}
-
-    entry = Entry()
-
-    # Monkeypatch async_update_entry so we can observe it's called
-    called = {}
-
-    def async_update_entry(*args, **kwargs):
-        # handle being bound as a method; accept positional or keyword 'data'
-        if "data" in kwargs:
-            called["updated"] = kwargs["data"]
-        elif len(args) >= 2:
-            called["updated"] = args[1]
-        else:
-            called["updated"] = None
-
-    hass.config_entries = type("C", (), {"async_update_entry": async_update_entry})()
-
-    # Call the coroutine
-    await integ.async_migrate_entry(hass, entry)
-
-    assert "climate.foo" in removed
-    assert called.get("updated") is not None
-    assert called["updated"].get("integration_version") == VERSION
 
 
 @pytest.mark.asyncio
@@ -92,12 +27,6 @@ async def test_async_setup_and_unload(monkeypatch):
         async def async_config_entry_first_refresh(self):
             return None
 
-    # Prevent migration from touching the real entity registry
-    async def _noop_migrate(hass, entry):
-        return None
-
-    monkeypatch.setattr(integ, "async_migrate_entry", _noop_migrate)
-
     # The async_setup_entry performs local imports; insert fake submodules
     import sys
     import types
@@ -108,8 +37,14 @@ async def test_async_setup_and_unload(monkeypatch):
         "custom_components.zehnder_multicontroller.coordinator"
     )
     coord_mod.RainmakerCoordinator = FakeCoordinator
-    sys.modules["custom_components.zehnder_multicontroller.api"] = api_mod
-    sys.modules["custom_components.zehnder_multicontroller.coordinator"] = coord_mod
+    # monkeypatch restores the real modules afterwards so other tests aren't
+    # affected
+    monkeypatch.setitem(
+        sys.modules, "custom_components.zehnder_multicontroller.api", api_mod
+    )
+    monkeypatch.setitem(
+        sys.modules, "custom_components.zehnder_multicontroller.coordinator", coord_mod
+    )
 
     class DummyHass:
         def __init__(self):
@@ -131,10 +66,7 @@ async def test_async_setup_and_unload(monkeypatch):
     hass.config_entries.async_forward_entry_setups = _forward
     hass.config_entries.async_unload_platforms = _unload
 
-    # include integration_version so migration is skipped inside setup
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "h", "integration_version": VERSION}, entry_id="e1"
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "h"}, entry_id="e1")
 
     result = await integ.async_setup_entry(hass, entry)
     assert result is True

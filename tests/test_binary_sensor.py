@@ -32,7 +32,7 @@ def test_binary_sensor_entity_properties(DummyCoordinator):
         ids = dev.get("identifiers")
     else:
         ids = dev.identifiers
-    assert (DOMAIN, "n1") in ids
+    assert (DOMAIN, "entry1_n1") in ids
 
 
 @pytest.mark.asyncio

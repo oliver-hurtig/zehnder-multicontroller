@@ -177,7 +177,7 @@ def test_unique_name_deviceinfo_and_setters_none(DummyCoordinator, DummyAPI):
     assert c.unique_id == "eid_n_climate"
     assert c.name == "NodeName"
     di = c.device_info
-    assert ("zehnder_multicontroller", "n") in di["identifiers"]
+    assert ("zehnder_multicontroller", "eid_n") in di["identifiers"]
 
     # Calling async_set_temperature with no temperature should be a no-op
     import asyncio

@@ -10,7 +10,7 @@ async def test_validate_input_success(monkeypatch, hass, DummyAPI):
     """validate_input should return title when connection succeeds."""
     # Use shared DummyAPI test class
     monkeypatch.setattr(
-        "custom_components.zehnder_multicontroller.config_flow.RainmakerAPI", DummyAPI
+        "custom_components.zehnder_multicontroller.api.RainmakerAPI", DummyAPI
     )
 
     info = await validate_input(hass, {"host": "h", "username": "u", "password": "p"})
@@ -27,10 +27,10 @@ async def test_validate_input_auth_error(monkeypatch, hass):
             raise Exception("auth")
 
     monkeypatch.setattr(
-        "custom_components.zehnder_multicontroller.config_flow.RainmakerAPI", BadAPI
+        "custom_components.zehnder_multicontroller.api.RainmakerAPI", BadAPI
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="auth"):
         await validate_input(hass, {"host": "h", "username": "bad", "password": "p"})
 
 

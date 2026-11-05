@@ -53,4 +53,4 @@ async def test_switch_setup_and_operations(DummyCoordinator, DummyAPI):
 
     # device_info is available and contains identifiers
     di = sw.device_info
-    assert ("zehnder_multicontroller", "node") in di["identifiers"]
+    assert ("zehnder_multicontroller", "eid_node") in di["identifiers"]
