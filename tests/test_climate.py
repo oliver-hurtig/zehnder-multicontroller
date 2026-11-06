@@ -51,8 +51,13 @@ async def test_temperature_and_modes_and_setters(DummyCoordinator, DummyAPI):
 
     ent = ZehnderClimate(coord, "entry1", "n1", "Node One")
 
+    assert ent.native_current_temperature == 21.5
+    assert ent.native_target_temperature == 22.0
+    # Home Assistant before 2026.11 reads the old names
     assert ent.current_temperature == 21.5
     assert ent.target_temperature == 22.0
+    assert ent.native_temperature_unit == "°C"
+    assert ent.temperature_unit == "°C"
     # supports target temperature and fan mode
     features = ent.get_supported_features()
     assert features

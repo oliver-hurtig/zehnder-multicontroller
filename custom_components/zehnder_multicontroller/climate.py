@@ -10,6 +10,7 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,11 +41,6 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         self._attr_name = node_name
         self._unique_id = f"{entry_id}_{node_id}_climate"
         self._fan_min = 0
-
-        try:
-            self._attr_temperature_unit = coordinator.hass.config.units.temperature_unit
-        except AttributeError:
-            self._attr_temperature_unit = "°C"
 
         # Initialize fan names based on fan_speed bounds
         self._fan_names = self._initialize_fan_names()
@@ -110,7 +106,12 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_temperature_unit(self) -> str:
+        # The device always reports in °C; Home Assistant converts for display.
+        return UnitOfTemperature.CELSIUS
+
+    @property
+    def native_current_temperature(self) -> float | None:
         node_data = self.coordinator.data.get(self._node_id, {})
         for param, meta in node_data.items():
             if param.lower() == "temp":
@@ -118,12 +119,28 @@ class ZehnderClimate(CoordinatorEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         node_data = self.coordinator.data.get(self._node_id, {})
         for param, meta in node_data.items():
             if param.lower() == "temp_setpoint":
                 return meta.get("value")
         return None
+
+    # Home Assistant before 2026.11 only reads the names below. Newer versions
+    # use the native_* members above and don't report these as deprecated,
+    # because this class provides both. Remove them once hacs.json requires
+    # 2026.11 or later.
+    @property
+    def temperature_unit(self) -> str:
+        return self.native_temperature_unit
+
+    @property
+    def current_temperature(self) -> float | None:
+        return self.native_current_temperature
+
+    @property
+    def target_temperature(self) -> float | None:
+        return self.native_target_temperature
 
     def _setpoint_bounds(self) -> dict[str, Any]:
         node_data = self.coordinator.data.get(self._node_id, {})

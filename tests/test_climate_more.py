@@ -42,8 +42,8 @@ async def test_hvac_mode_and_temperatures(DummyCoordinator):
     from custom_components.zehnder_multicontroller.climate import ZehnderClimate
 
     c = ZehnderClimate(coord, "eid", "n", "Node")
-    assert c.current_temperature == 19
-    assert c.target_temperature == 22
+    assert c.native_current_temperature == 19
+    assert c.native_target_temperature == 22
     assert c.hvac_mode == HVACMode.OFF
 
     # Radiant enabled and season->HEAT/COOL/None
@@ -282,8 +282,8 @@ def test_current_and_target_none_and_hvac_modes(DummyCoordinator):
     c = __import__(
         "custom_components.zehnder_multicontroller.climate", fromlist=["ZehnderClimate"]
     ).ZehnderClimate(DummyCoordinator({}), "eid", "n", "N")
-    assert c.current_temperature is None
-    assert c.target_temperature is None
+    assert c.native_current_temperature is None
+    assert c.native_target_temperature is None
     assert isinstance(c.hvac_modes, list)
 
 

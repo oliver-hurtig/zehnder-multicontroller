@@ -11,6 +11,7 @@ from custom_components.zehnder_multicontroller.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 PARAMS = [
@@ -116,6 +117,38 @@ async def test_climate_works_in_real_core(hass, loaded_entry):
     assert state.attributes["min_temp"] == 18.0
     assert state.attributes["max_temp"] == 28.0
     assert state.attributes["target_temp_step"] == 0.5
+
+
+async def test_climate_logs_no_temperature_deprecations(hass, loaded_entry, caplog):
+    """Reading the state must not use the climate names deprecated in 2026.11."""
+    _available_state(hass, "climate", "climate")
+    assert "deprecated" not in caplog.text
+
+
+@pytest.fixture
+def fahrenheit_hass(hass):
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+
+async def test_climate_converts_from_celsius_when_ha_uses_fahrenheit(
+    hass, fahrenheit_hass, loaded_entry
+):
+    """Regression: device °C values were treated as °F on Fahrenheit systems."""
+    state = _available_state(hass, "climate", "climate")
+    assert state.attributes["current_temperature"] == 70  # 21 °C
+    assert state.attributes["temperature"] == 72  # 22 °C
+    assert state.attributes["min_temp"] == 64  # 18 °C
+    assert state.attributes["max_temp"] == 82  # 28 °C
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": state.entity_id, "temperature": 73.4},
+        blocking=True,
+    )
+    node, param, value = FakeAPI.instances[-1].async_set_param.await_args.args
+    assert (node, param) == ("n1", "temp_setpoint")
+    assert value == pytest.approx(23.0)
 
 
 @pytest.mark.parametrize("cycles", [1, 3])
